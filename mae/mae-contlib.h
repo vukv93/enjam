@@ -20,7 +20,6 @@ namespace Mae {
   /* @todo[240721_022057] > As now in now. */
   /* @todo[240718_033012] Use iterators for iteration. */
   struct LinearPatcher : Container {
-    template<class T> using Maybe = std::optional<T>;
     struct ModuleWrapper {
       ModuleWrapper(Module* module, const std::string name);
       Module* module;
@@ -31,9 +30,10 @@ namespace Mae {
     ModuleWrapper* m_queue = nullptr;
     ModuleWrapper* m_end = nullptr;
     LinearPatcher(Memory::SimplePool* pool, Count nOut = 1, Count nIn = 0);
-    void SetSampleRate(double fs);
+    virtual int Allocate(Count nFrames);
+    virtual void SetSampleRate(double fs);
     /** Audio processing callback. */
-    int Process(Count nFrames);
+    virtual int Process(Count nFrames);
     /** Access a module at position in queue. */
     ModuleWrapper* At(Count idx);
     /** Access a module at position in queue. */
@@ -45,7 +45,6 @@ namespace Mae {
     /** Remove module, undoing all existing connections from it. */
     void Remove(Count position = 0);
     /** Move module from position src to dst. */
-    /* @todo[240717_061309] Mind the connections. Later. */
     void Move(Count src, Count dst);
     /** Connect output port of the source to input port of the destination. */
     void Connect(

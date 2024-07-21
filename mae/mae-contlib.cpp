@@ -1,6 +1,5 @@
 #include "mae-contlib.h"
 namespace Mae {
-  /** Linear module container. */
   SimpleMonoStrip::SimpleMonoStrip(
       Memory::SimplePool* pool, std::vector<Module*>&& plugins) :
     Container(pool,std::move(plugins),1,0) {}
@@ -40,10 +39,13 @@ namespace Mae {
     auto m = m_queue;
     while (m != nullptr) { m->module->SetSampleRate(fs); m = m->next; }
   }
-  /** Audio processing callback. */
+  int LinearPatcher::Allocate(Count nFrames) {
+    auto m = m_queue;
+    while (m != nullptr) { m->module->Allocate(nFrames); m = m->next; }
+    return 0;
+  }
   int LinearPatcher::Process(Count nFrames) {
     ModuleWrapper* m = m_queue;
-    while (m != nullptr) { m->module->Allocate(nFrames); m = m->next; }
     if (m_end)
       for (Count i = 0;
           i < m_end->module->m_outputs.size() && i < m_outputs.size();
@@ -51,19 +53,15 @@ namespace Mae {
         m_end->module->m_outputs[i].m_buffer = m_outputs[i].m_buffer;
     m = m_queue;
     while (m != nullptr) { m->module->Process(nFrames); m = m->next; }
-    m_memoryPool->FreeAll();
     return 0;
   }
-  /** Access a module at position in queue. */
   LinearPatcher::ModuleWrapper* LinearPatcher::At(Count idx) {
     auto it = m_queue; int i = 0;
     while (i < idx && it != nullptr) { it = it->next; i++; }
     return it;
   }
-  /** Access a module at position in queue. */
   LinearPatcher::ModuleWrapper* LinearPatcher::operator[](Count idx) { return At(idx); }
-  /** Get module position in queue. */
-  LinearPatcher::Maybe<Count> LinearPatcher::Find(ModuleWrapper* mod) {
+  Maybe<Count> LinearPatcher::Find(ModuleWrapper* mod) {
     Maybe<Count> idx = {};
     Count i = 0;
     auto it = m_queue;
@@ -73,7 +71,6 @@ namespace Mae {
     }
     return idx;
   }
-  /** Add module to the list at position, start by default. */
   void LinearPatcher::Add(Module* newModule, const std::string& name, Count position) {
     ModuleWrapper* newWrap = new ModuleWrapper(newModule,name);
     if (m_queue == nullptr) {
@@ -106,7 +103,6 @@ namespace Mae {
       }
     }
   }
-  /** Remove module, undoing all existing connections from it. */
   void LinearPatcher::Remove(Count position) {
     ModuleWrapper* target = At(position);
     if (!target) return;
@@ -116,7 +112,6 @@ namespace Mae {
     else m_end = target->prev;
     delete target;
   }
-  /** Move module from position src to dst. */
   /* @todo[240717_061309] Mind the connections. Later. */
   void LinearPatcher::Move(Count src, Count dst) {
     if (src != dst) {
@@ -143,7 +138,6 @@ namespace Mae {
       }
     }
   }
-  /** Connect output port of the source to input port of the destination. */
   void LinearPatcher::Connect(
       Count srcIdx, Count srcPort,
       Count dstIdx, Count dstPort) {
@@ -156,7 +150,6 @@ namespace Mae {
       dst->module->m_inputs[dstPort] =
         &src->module->m_outputs[srcPort];
   }
-  /** Disconnect input of a module (latching last value?). */
   int LinearPatcher::Disconnect(Count dstIdx, Count dstPort) {
     ModuleWrapper* dst = At(dstIdx);
     if(dstPort >= dst->module->m_inputs.size()) return -1;
@@ -165,7 +158,6 @@ namespace Mae {
       return 0;
     }
   }
-  /** Utility. */
   void LinearPatcher::PrintQueue() {
     auto it = m_queue;
     while (it != nullptr) {
@@ -173,7 +165,6 @@ namespace Mae {
       it = it->next;
     }
   }
-  /** Utility. */
   void LinearPatcher::PrintQueueDebug() {
     std::cout << "modules: " << std::endl;
     auto it = m_queue, revit = m_end;
@@ -186,7 +177,6 @@ namespace Mae {
       << ":end=" << (m_end ? m_end->name : "nullptr")
       << std::endl;
   }
-  /** Utility. */
   void LinearPatcher::PrintQueueVerbose() {
     auto it = m_queue;
     while (it != nullptr) {
@@ -197,7 +187,6 @@ namespace Mae {
       it = it->next;
     }
   }
-  /** Utility. */
   void LinearPatcher::PrintConnections() {
     auto dstit = m_queue;
     while (dstit != nullptr) {

@@ -11,4 +11,5 @@ Session.vim
 *.o
 *.so
 *.a
+.#*
 /node_modules/
