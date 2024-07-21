@@ -1,0 +1,8 @@
+project(enjam)
+cmake_minimum_required(VERSION 3.0)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_subdirectory(libgarage)
+add_subdirectory(mae)
+add_executable(enjam enjam.cpp)
+target_link_libraries(enjam mae)

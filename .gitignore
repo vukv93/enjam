@@ -1,0 +1,14 @@
+/build/
+/local/
+.cache/
+*.sw[po]
+/result
+*.wav
+Session.vim
+*.pdf
+*~
+*.out
+*.o
+*.so
+*.a
+/node_modules/
