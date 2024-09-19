@@ -1,13 +1,14 @@
 #include <iostream>
-#include "memory.h"
+#include "memory.hpp"
 using namespace std;
-/** First try */
 namespace Memory {
   SimplePool::SimplePool(Count size)
     : m_size(size),
     m_block(new uint8_t[m_size]),
     m_unused(m_block)
-  {}
+  {
+    if (!m_block) throw runtime_error("Could not allocate pool block");
+  }
   SimplePool::~SimplePool() { delete[] m_block; }
   uint8_t* SimplePool::Allocate(Count size) {
     if (m_unused + size > m_block + m_size) return nullptr;
@@ -21,19 +22,10 @@ namespace Memory {
     m_unused = m_block;
     return 0;
   }
-}
-/** Second try */
-/* @todo[240629_074050] Implement better allocation algorithm. */
-namespace Memory {
-  PoolV2::PoolV2(Count size, Count tableSize)
-    : m_size(size),
-    m_block(new uint8_t[m_size]),
-    m_freeTable(tableSize), m_usedTable(tableSize)
-  {}
-  PoolV2::~PoolV2() { delete[] m_block; }
-  Element PoolV2::Allocate(Count size) {
-    for (auto& e : m_freeTable) {
-    }
-    return {};
+  int SimplePool::Resize(Count size) {
+    delete[] m_block;
+    m_block = new uint8_t[size];
+    if (m_block) { m_size = size; return 0; }
+    else return -1;
   }
 }

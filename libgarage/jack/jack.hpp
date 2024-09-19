@@ -3,21 +3,30 @@
 #include <string>
 #include <jack/midiport.h>
 #include <jack/jack.h>
+/** Audio utilities. */
 namespace Audio {
-  struct Jack {
+  /** JACK (the audio connection kit) wrapper. */
+  namespace Jack {
     using Sample = jack_default_audio_sample_t;
     using MidiEvent = jack_midi_event_t;
+    using Count = unsigned long;
+    /** Callback provider interface. */
     struct ICallback {
-      double m_sampleRate;
       virtual int CallbackProcess(uint32_t nFrames) = 0;
       virtual int CallbackSampleRate(uint32_t nFrames) = 0;
       virtual int CallbackShutdown() = 0;
     };
+    /** Do nothing. */
     struct MockCallback : ICallback {
-      virtual int CallbackProcess(uint32_t nFrames) { return 0; }
-      virtual int CallbackSampleRate(uint32_t nFrames) { return 0; }
-      virtual int CallbackShutdown() {return 0; }
+      virtual int CallbackProcess(uint32_t nFrames) {
+        (void)nFrames; return 0;
+      }
+      virtual int CallbackSampleRate(uint32_t nFrames) {
+        (void)nFrames; return 0;
+      }
+      virtual int CallbackShutdown() { return 0; }
     };
+    /** Client wrapper. */
     struct Client {
       jack_client_t* m_jackClient;
       Client(const std::string& name, ICallback& callback);
@@ -27,9 +36,9 @@ namespace Audio {
       double GetSampleRate();
     };
     struct Port {
-      enum Direction {Out, In};
       enum Type {Audio, Midi};
-      const Client* m_client;
+      enum Direction {Out, In};
+      Client* m_client;
       jack_port_t* m_jackPort;
       Port(
           Client& client,
@@ -55,7 +64,10 @@ namespace Audio {
           Client& client,
           const std::string& name,
           Direction direction = Out);
+      MidiPort(MidiPort&& old);
       MidiEvent* GetBuffer(size_t nFrames);
+      Count GetNEvents(MidiEvent* eventBuffer);
+      int GetEvent(MidiEvent* ev, Count n, MidiEvent* eventBuffer);
     };
   };
 };

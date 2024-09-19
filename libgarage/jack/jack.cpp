@@ -1,7 +1,7 @@
 #include <jack/jack.h>
 #include <cmath>
 #include <stdexcept>
-#include "jack.h"
+#include "jack.hpp"
 // @todo[240619_024050] Error handling.
 /* @todo[240721_013359] And a lot more. */
 using namespace std;
@@ -17,11 +17,12 @@ static void jackShutdownCallbackWrapper(void* arg) {
 Audio::Jack::Client::Client(const string& name, ICallback& callback) {
   m_jackClient = jack_client_open(name.c_str(), JackNullOption, nullptr);
   if (m_jackClient == nullptr)
-    throw runtime_error("Couldn't open JACK client!");
-  jack_set_process_callback(
-      m_jackClient, jackProcessCallbackWrapper, (void*)&callback);
-  jack_set_sample_rate_callback(
-      m_jackClient, jackSampleRateCallbackWrapper, (void*)&callback);
+    throw runtime_error("Couldn't open client");
+  if (jack_set_process_callback(
+          m_jackClient, jackProcessCallbackWrapper, (void*)&callback)
+        || jack_set_sample_rate_callback(
+          m_jackClient, jackSampleRateCallbackWrapper, (void*)&callback))
+    throw runtime_error("Could not set a callback");
   jack_on_shutdown(
       m_jackClient, jackShutdownCallbackWrapper, (void*)&callback);
 }
@@ -32,21 +33,21 @@ double Audio::Jack::Client::GetSampleRate() {
   return static_cast<double>(jack_get_sample_rate(m_jackClient));
 }
 Audio::Jack::Port::Port(
-          Client& client,
-          const std::string& name,
-          Direction direction,
-          Type type) {
+    Client& client,
+    const std::string& name,
+    Direction direction,
+    Type type) {
   const char* jack_port_type;
   unsigned long jack_port_flags = 0;
   switch (direction) {
     case Out: jack_port_flags |= JackPortIsOutput; break;
     case In: jack_port_flags |= JackPortIsInput; break;
-    default: throw runtime_error("Unknown port direction!");
+    default: throw runtime_error("Unknown port direction");
   }
   switch (type) {
     case Audio: jack_port_type = JACK_DEFAULT_AUDIO_TYPE; break;
     case Midi:  jack_port_type = JACK_DEFAULT_MIDI_TYPE; break;
-    default: throw runtime_error("Unknown port type!");
+    default: throw runtime_error("Unknown port type");
   }
   m_client = &client;
   m_jackPort = jack_port_register(
@@ -56,7 +57,7 @@ Audio::Jack::Port::Port(
       jack_port_flags,
       0);
   if (m_jackPort == nullptr)
-    throw runtime_error("Could not create port!");
+    throw runtime_error("Could not create port");
 }
 Audio::Jack::Port::Port(Port&& old) :
   m_client(old.m_client),
@@ -76,21 +77,29 @@ const char* Audio::Jack::Port::GetName() {
   return jack_port_name(m_jackPort);
 }
 Audio::Jack::AudioPort::AudioPort(
-          Client& client,
-          const std::string& name,
-          Direction direction) :
+    Client& client,
+    const std::string& name,
+    Direction direction) :
   Port(client, name, direction, Audio)
 {}
-Audio::Jack::AudioPort::AudioPort(AudioPort&& old) : Port(move(old)) {}
+Audio::Jack::AudioPort::AudioPort(AudioPort&& old) : Port(std::move(old)) {}
 Audio::Jack::Sample* Audio::Jack::AudioPort::GetBuffer(size_t nFrames) {
   return (Audio::Jack::Sample*)jack_port_get_buffer(m_jackPort, nFrames);
 }
 Audio::Jack::MidiPort::MidiPort(
-          Client& client,
-          const std::string& name,
-          Direction direction) :
+    Client& client,
+    const std::string& name,
+    Direction direction) :
   Port(client, name, direction, Midi)
 {}
+Audio::Jack::MidiPort::MidiPort(MidiPort&& old) : Port(std::move(old)) {}
 Audio::Jack::MidiEvent* Audio::Jack::MidiPort::GetBuffer(size_t nFrames) {
   return (Audio::Jack::MidiEvent*)jack_port_get_buffer(m_jackPort, nFrames);
+}
+Audio::Jack::Count Audio::Jack::MidiPort::GetNEvents(MidiEvent* eventBuffer) {
+  return jack_midi_get_event_count(eventBuffer);
+}
+int Audio::Jack::MidiPort::GetEvent(
+    MidiEvent* ev, Count n, MidiEvent* eventBuffer) {
+  return jack_midi_event_get(ev, eventBuffer, n);
 }

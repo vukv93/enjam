@@ -6,33 +6,28 @@
 namespace Memory {
   /** For counting things. */
   using Count = unsigned long;
-  /** Memory allocation unit. */
-  struct Element {
-    Count size;
-    void* address;
+  /* @todo[240817_032456] Abstract pool interface. */
+  struct Pool {
+    /** Get a chunk of size or nullptr. */
+    virtual uint8_t* Allocate(Count size) = 0;
+    /** Get number of currently allocated bytes. */
+    virtual Count Used() = 0;
+    /** Reset allocations. */
+    virtual int FreeAll() = 0;
+    /** Resize the pool. */
+    virtual int Resize(Count size) = 0;
   };
-  /** Memory allocation pool. */
-  struct SimplePool {
+  /** Simple realtime memory allocation pool. */
+  struct SimplePool : Pool {
     Count m_size;
     uint8_t* m_block;
     uint8_t* m_unused;
     SimplePool(Count size);
     ~SimplePool();
     uint8_t* Allocate(Count size);
+    Count Used() { return m_unused-m_block; }
     int FreeAll();
-  };
-  /** TBD */
-  struct PoolV2 {
-    Count m_size;
-    uint8_t* m_block;
-    std::vector<Element> m_freeTable;
-    std::vector<Element> m_usedTable;
-    PoolV2(Count size, Count tableSize);
-    ~PoolV2();
-    Element Allocate(Count size);
-    int Free(Element& element);
-    int Free(void* address);
-    int FreeAll();
+    int Resize(Count size);
   };
 }
 /* @todo[240624_163903] Read "Algorithms and data structures" book. */

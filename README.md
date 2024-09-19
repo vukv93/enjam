@@ -1,23 +1,19 @@
 # Enjam
 
-*Modular environment.*
+*Musical environment.*
 
 ![Cover](doc/images/enjam-cover-256.png)
 
 ## Scope
 
-Computing environment, currently focused on development of Mae - Modular audio
-engine.
+A musical computing environment, currently focused on development of Mae —
+a modular audio engine, and the included module libraries.
 
 ## Documentation
 
-Available [here](https://vukv93.github.io/doc/enjam/), possibly
-out-of-date.
-Build it yourself using `make doc`.
+Build it using `make doc`, if you have Doxygen.
 
-## Example
+## Examples
 
-See [enjam.cpp](enjam.cpp).
-Build with `make`.
-Run as `./build/enjam <duration in seconds>`.
+See [test.cpp](test/test.cpp).
 

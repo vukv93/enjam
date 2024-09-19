@@ -1,0 +1,58 @@
+#+title:    Enjam
+#+subtitle: Musical environment
+#+author:   Vuk Vasiljević
+#+email:    vukv@nouua.com
+
+#+attr_html: :width 512px
+[[file:./images/enjam-cover.png]]
+
+* Introduction
+
+  Enjam is a programmable musical environment.
+
+  See the [[../README.md][README]] file and the
+  [[../build/doc/html/index.html][documentation]] for more
+  information.
+
+* Discussion
+
+** TODO <2024-09-09 Mon 07:16>
+   - [X] Hear protocol for simple module control (amp, pan, etc.).
+     - [X] Make it as compatible with MIDI (CC=[0,127], etc.) as meaningful.
+   - [-] Enjam class minimization.
+     - [X] Or deprecation.
+     - [ ] Probably refactor to prepare for UI.
+   - [X] Demolition tests. Deprecated, using virtual destructors.
+   - [-] General cleanup, RAII enforcement.
+     - [ ] Valgrind problems.
+       - [ ] Just the Pipewire ones are left. Elaborate on those.
+     - [X] Containers as children module owners.
+   - [ ] Error codes all around.
+   - [ ] Samplib update.
+   - [ ] Faustlib IIT.
+   - [ ] Comprehensive testing.
+     - [ ] Dynamic LinearPatcher usage.
+     - [ ] Extensive C++ API usage.
+     - [ ] Extensive C API usage.
+
+** TODO <2024-09-16 Mon 12:37>
+   - [-] Rethink ~libgarage~.
+     - [X] Deprecate ~main~, introduce ~ui~.
+     - [ ] Refactor ~sndfile~ and ~jack~.
+   - [X] Containers as real-time memory managers.
+     - Owns a pool for child modules, which can be reused accross siblings.
+     - Has a reference to outer pool for external connections.
+     - Top-level only needs the inner one.
+
+** TODO <2024-09-17 Tue 07:40>
+   - [ ] Containerized utility modules, nice for testing.
+     - Filter + Amp + Pan = Mixer strip, etc.
+   - [ ] ALSA and Pipewire analysis.
+   - [-] Basic MIDI support
+     - [ ] Note on/off
+       - [ ] Test note off
+     - [X] CC
+
+** TODO <2024-09-19 Thu 10:34>
+   - [X] GitHub release preparation branch.
+
